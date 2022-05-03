@@ -3,7 +3,7 @@ package it.dani.tablut.data
 import java.util.*
 import kotlin.collections.ArrayList
 
-data class Move(val board: TablutBoard, val move : Pair<Position,Position>, val role : Role, val eat : MutableList<Eat> = ArrayList()) {
+data class Move(val board: TablutBoard, val move : Pair<Position,Position>, val role : Role, val precedent : Optional<Move>, val eat : MutableList<Eat> = ArrayList()) {
     val following : MutableList<Move> = LinkedList()
 
     private var futureTableCache = Optional.empty<TablutBoard>()

@@ -92,7 +92,7 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
             this.mutex.release()
 
             if(count in positions.indices && state.moves.size < 200) {
-                val partialFutureMoves = this.rules.genFeasiblePositions(state.board,positions[count])
+                val partialFutureMoves = this.rules.genFeasibleMoves(state.currentMove,positions[count])
                 futureMoves += partialFutureMoves
                 count++
 

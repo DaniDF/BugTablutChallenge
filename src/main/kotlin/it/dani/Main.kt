@@ -3,6 +3,7 @@ package it.dani
 import com.google.gson.Gson
 import it.dani.Main.Companion.PLAYERNAME
 import it.dani.tablut.data.Move
+import it.dani.tablut.data.Position
 import it.dani.tablut.data.Role
 import it.dani.tablut.data.TablutBoard
 import it.dani.tablut.server.ServerTablut
@@ -12,6 +13,8 @@ import it.dani.tablut.think.AgentState
 import it.dani.tablut.time.TablutTimer
 import it.myunibo.Action
 import it.myunibo.State
+import java.util.*
+import kotlin.collections.ArrayList
 
 fun main(args: Array<String>) {
 
@@ -46,6 +49,7 @@ fun main(args: Array<String>) {
             when(board.turn){
                 role -> {
                     agentState.board = board
+                    agentState.currentMove = Move(board,Position(0,0) to Position(0,0),board.turn, Optional.empty())
                     agentState.moves.clear()
 
                     if(agentState.moves.isNotEmpty()) {
