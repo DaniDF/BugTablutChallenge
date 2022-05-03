@@ -32,9 +32,9 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
             this.findSolution(this.state) { l ->
                 this.mutex.acquire()
                 this.state.moves.addAll(l)
-                this.state.moves.sortByDescending { it.evaluate(this.evaluator::evaluate) }
+                this.state.moves.sortByDescending { it.evaluationResult }
                 this.state.toExpand.addAll(l)
-                this.state.toExpand.sortByDescending { it.evaluate(this.evaluator::evaluate) }
+                //this.state.toExpand.sortByDescending { it.evaluate(this.evaluator::evaluate) }
                 this.mutex.release()
             }
 
@@ -97,6 +97,26 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
                 count++
 
             } else {
+                var deep = 0
+
+                var fatherCounter : (List<Move>) -> Unit = {}
+                fatherCounter = { list ->
+                    list.firstOrNull()?.let {
+                        if(deep < DEPTH_LIMIT) {
+                            deep++
+                            //fatherCounter(it.)
+                        }
+                    }
+                }
+
+                /*
+                non hai bisogno di valutare tutte le mossse su quel libello
+                min max mischiato con alfa beta
+                 */
+
+
+
+                futureMoves.forEach { it.evaluate(this.evaluator::evaluate) }
                 onFinished(futureMoves)
 
                 flagStop = true
@@ -105,6 +125,10 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
             this.mutex.acquire()
         }
         this.mutex.release()
+    }
+
+    companion object {
+        private const val DEPTH_LIMIT = 4
     }
 }
 

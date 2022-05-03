@@ -7,7 +7,7 @@ data class Move(val board: TablutBoard, val move : Pair<Position,Position>, val 
     val following : MutableList<Move> = LinkedList()
 
     private var futureTableCache = Optional.empty<TablutBoard>()
-    private var evaluationResult = -1    //TODO remove only for debug
+    var evaluationResult = -1
 
     fun <T> evaluate(evaluator : (Move) -> T) : T {
         val result = evaluator(this)
