@@ -7,8 +7,8 @@ class TablutBoard : java.io.Serializable {
 
     var turn : Role = Role.WHITE
 
-    fun isCastle(row : Int, col : Int) : Boolean {
-        return TablutBoardCells.castle.contains(row to col)
+    fun isThrone(row : Int, col : Int) : Boolean {
+        return TablutBoardCells.throne.contains(row to col)
     }
 
     fun isBlackStation(row : Int, col : Int) : Boolean {
@@ -78,7 +78,7 @@ enum class TablutBoardCellValue {
 
 private class TablutBoardCells {
     companion object {
-        val castle = hashSetOf(5 to 5)
+        val throne = hashSetOf(4 to 4)
         val blackStation = hashSetOf(
             3 to 0, 0 to 3, 3 to 8, 8 to 3,
             4 to 0, 0 to 4, 4 to 8, 8 to 4,
