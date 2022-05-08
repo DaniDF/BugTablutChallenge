@@ -19,7 +19,7 @@ open class Move(open val board: TablutBoard, open val move : Pair<Position,Posit
     }
 
     override fun toString(): String {
-        return "from: ${this.move.first} to ${this.move.second} eat: ${this.eat.size}"
+        return "from: ${this.move.first} to ${this.move.second} eat: ${this.eat.size}, evaluated = ${if(this.evaluationResult.isPresent) {this.evaluationResult.get()} else{ "empty" }}"
     }
 
     fun futureTable() : TablutBoard {

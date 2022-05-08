@@ -6,6 +6,7 @@ import it.dani.think.Evaluator
 import java.util.Optional
 import java.util.concurrent.Semaphore
 import kotlin.collections.ArrayList
+import kotlin.random.Random
 
 class Agent(val state: AgentState) : it.dani.think.Thinker {
 
@@ -136,6 +137,13 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
 
         }
 
+        this.state.moves.sortByDescending { m ->
+            if(m.evaluationResult.isPresent) {
+                m.evaluationResult.get()
+            } else {
+                Int.MIN_VALUE
+            }
+        }
         this.state.toExpand.addAll(toExpand)
         this.mutex.release()
     }
@@ -210,7 +218,7 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
                 count++
 
             } else {
-                onFinished(futureMoves)
+                onFinished(futureMoves.also { it.shuffle() })
 
                 flagStop = true
             }
@@ -281,6 +289,21 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
             }
 
             return result
+        }
+
+        fun <T> MutableList<T>.shuffle()
+        {
+            // start from the end of the list
+            for (i in this.size - 1 downTo 1)
+            {
+                // get a random index `j` such that `0 <= j <= i`
+                val j = Random.nextInt(i + 1)
+
+                // swap element at i'th position in the list with the element at j'th position
+                val temp = this[i]
+                this[i] = this[j]
+                this[j] = temp
+            }
         }
     }
 }

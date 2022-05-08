@@ -48,6 +48,7 @@ fun main(args: Array<String>) {
                     agentState.updateBoard(board)
 
                     agentState.moves.clear()
+                    agentState.toExpand.clear()
 
                     if(agentState.moves.isNotEmpty()) {
                         var flagStop = false
@@ -69,13 +70,6 @@ fun main(args: Array<String>) {
                         onTikListeners += {
                             agent.stopThink()
                             agentState = agent.state
-                            agentState.moves.sortByDescending { m ->
-                                if(m.evaluationResult.isPresent) {
-                                    m.evaluationResult.get()
-                                } else {
-                                    Int.MIN_VALUE
-                                }
-                            }
                             val move = agentState.moves.first()
                             println("I play $move")
                             server.respond(move.toAction())
