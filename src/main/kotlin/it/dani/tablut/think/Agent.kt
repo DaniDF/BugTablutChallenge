@@ -37,43 +37,107 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
         var toExpand = l
 
         if (deep >= DEPTH_LIMIT) {
-            l.forEach { it.evaluate(this.evaluator::evaluate) }
 
-
-            val compareFunc: (Role) -> (List<Move>,Int?) -> Pair<Move,Int>? = {
+            val compareFuncDfl: (Role) -> (List<Move>) -> Move? = {
                 when (it) {
                     this.state.role -> {
-                        { list, threshold ->
-                            if(threshold != null) {
-                                list.maxOfOrNull(threshold) { move -> move.evaluationResult }
-                            } else {
-                                list.maxOfOrNull(Int.MAX_VALUE) { move -> move.evaluationResult }
+                        { list ->
+                            list.maxOfOrNull { m ->
+                                if(m.evaluationResult.isPresent) {
+                                    m.evaluationResult.get()
+                                } else {
+                                    Int.MIN_VALUE
+                                }
                             }
                         }
                     }   //MAX
                     else -> {
-                        { list, threshold ->
-                            if(threshold != null) {
-                                list.minOfOrNull(threshold) { move -> move.evaluationResult }
-                            } else {
-                                list.minOfOrNull(Int.MAX_VALUE) { move -> move.evaluationResult }
+                        { list ->
+                            list.minOfOrNull { m ->
+                                if(m.evaluationResult.isPresent) {
+                                    m.evaluationResult.get()
+                                } else {
+                                    Int.MAX_VALUE
+                                }
                             }
                         }
                     }   //MIN
                 }
             }
 
+            val compareFunc: (Role) -> (Move,Optional<Move>) -> Move = {
+                val selector : (Move) -> Optional<Int> = { m -> m.evaluationResult }
+
+                when (it) {
+                    this.state.role -> {
+                        { a, b ->
+                            max(a,b,selector)
+                        }
+                    }   //MAX
+                    else -> {
+                        { a, b ->
+                            min(a,b,selector)
+                        }
+                    }   //MIN
+                }
+            }
+
+            /*
+            val compareFunc: (Role) -> (List<Move>) -> Int = {
+                when (it) {
+                    this.state.role -> {
+                        { list ->
+                            list.maxOfOrNull { m -> m.evaluationResult } ?: 0
+                        }
+                    }   //MAX
+                    else -> {
+                        { list ->
+                            list.minOfOrNull { m -> m.evaluationResult } ?: 0
+                        }
+                    }   //MIN
+                }
+            }
+            */
+
             var writeEvaluations: (Move) -> Unit = {}
-            writeEvaluations = {m ->
+            writeEvaluations = { m ->
+                /*
                 val precedent : Move? = if(m.precedent.isPresent) {
                     m.precedent.get()
                 } else {
                     null
                 }
                 compareFunc(m.role)(m.following,precedent?.evaluationResult)?.let {
-                    m.evaluationResult = it.second
-                    toExpand = listOf(it.first)
+                    m.evaluationResult = it.evaluationResult
+                    //toExpand = listOf(it.first)   //TODO solo a livello 4 aggiungi
                 }
+                */
+
+                //m.evaluationResult = compareFunc(m.role)(m.following)
+
+                if(m.precedent.isPresent && m.precedent.get().evaluationResult.isEmpty) {
+                    l.forEach { it.evaluate(this.evaluator::evaluate) }
+                    compareFuncDfl(m.role)(l)?.let { m.precedent.get().evaluationResult = it.evaluationResult }
+
+                } else if(m.precedent.isPresent) {
+                    var continueEvaluation = true
+                    var localBest : Optional<Move> = Optional.empty()
+
+                    l.forEach {
+                        if(continueEvaluation) {
+                            it.evaluate(this.evaluator::evaluate)
+                            localBest = Optional.of(compareFunc(m.role)(it,localBest))
+
+                            continueEvaluation = compareFunc(m.precedent.get().role)(m.precedent.get(),localBest) == localBest.get()
+                        }
+                    }
+
+                    if(continueEvaluation && localBest.isPresent) {
+                        m.precedent.get().evaluationResult = localBest.get().evaluationResult
+                    }
+                }
+
+
                 if (m.precedent.isPresent) {
                     writeEvaluations(m.precedent.get())
                 }
@@ -83,7 +147,13 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
 
         }
 
-        this.state.moves.sortByDescending { it.evaluationResult }
+        this.state.moves.sortByDescending {
+            if(it.evaluationResult.isPresent) {
+                it.evaluationResult.get()
+            } else {
+                Int.MIN_VALUE
+            }
+        }
         this.state.toExpand.addAll(toExpand)
         this.mutex.release()
     }
@@ -168,54 +238,66 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
         this.mutex.release()
     }
 
-    private fun <T, R : Comparable<R>> Iterable<T>.minOfOrNull(stopThreshold : R, selector: (T) -> R): Pair<T,R>? {
-        var result : Pair<T,R>? = null
-
-        var count = this.count()
-        var list = this.take(count)
-
-        while(count > 0 && (result?.let { it.second > stopThreshold } != false)) {
-            result = if(result == null) {
-                list.last() to selector(list.last())
-            } else {
-                if(minOf(result.second,selector(list.last())) == result.second) {
-                    result
-                } else {
-                    list.last() to selector(list.last())
-                }
-            }
-
-            list = this.take(--count)
-        }
-
-        return result
-    }
-
-    private fun <T, R : Comparable<R>> Iterable<T>.maxOfOrNull(stopThreshold : R, selector: (T) -> R): Pair<T,R>? {
-        var result : Pair<T,R>? = null
-
-        var count = this.count()
-        var list = this.take(count)
-
-        while(count > 0 && (result?.let { it.second < stopThreshold } != false)) {
-            result = if(result == null) {
-                list.last() to selector(list.last())
-            } else {
-                if(maxOf(result.second,selector(list.last())) == result.second) {
-                    result
-                } else {
-                    list.last() to selector(list.last())
-                }
-            }
-
-            list = this.take(--count)
-        }
-
-        return result
-    }
-
     companion object {
-        private const val DEPTH_LIMIT = 4
+        private const val DEPTH_LIMIT = 2
+
+        private fun <T, R : Comparable<R>> max(a : T,b : Optional<T>, selector : (T) -> Optional<R>) : T {
+            return if(b.isEmpty) {
+                a
+            } else {
+                if(maxOf(selector(a).get(),selector(b.get()).get()) == selector(a)) {
+                    a
+                } else {
+                    b.get()
+                }
+            }
+        }
+
+        private fun <T, R : Comparable<R>> min(a : T,b : Optional<T>, selector : (T) -> Optional<R>) : T {
+            return if(b.isEmpty) {
+                a
+            } else if(b.isPresent && selector(b.get()).isEmpty) {
+                a
+            } else {
+                if(minOf(selector(a).get(),selector(b.get()).get()) == selector(a)) {
+                    a
+                } else {
+                    b.get()
+                }
+            }
+        }
+
+        private fun <T,R : Comparable<R>> List<T>.maxOfOrNull(selector : (T) -> R) : T? {
+            var result : T? = null
+
+            this.forEach {
+                result = if(result == null) {
+                    it
+                } else if(maxOf(selector(it),selector(result!!)) == selector(result!!)) {
+                    result
+                } else {
+                    it
+                }
+            }
+
+            return result
+        }
+
+        private fun <T,R : Comparable<R>> List<T>.minOfOrNull(selector : (T) -> R) : T? {
+            var result : T? = null
+
+            this.forEach {
+                result = if(result == null) {
+                    it
+                } else if(minOf(selector(it),selector(result!!)) == selector(result!!)) {
+                    result
+                } else {
+                    it
+                }
+            }
+
+            return result
+        }
     }
 }
 

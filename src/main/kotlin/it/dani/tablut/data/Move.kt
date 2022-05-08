@@ -3,15 +3,15 @@ package it.dani.tablut.data
 import java.util.*
 import kotlin.collections.ArrayList
 
-data class Move(val board: TablutBoard, val move : Pair<Position,Position>, val role : Role, var precedent : Optional<Move>, val eat : MutableList<Eat> = ArrayList()) {
+open class Move(open val board: TablutBoard, open val move : Pair<Position,Position>, open val role : Role, open var precedent : Optional<Move>, open val eat : MutableList<Eat> = ArrayList()) {
     val following : MutableList<Move> = LinkedList()
 
     private var futureTableCache = Optional.empty<TablutBoard>()
-    var evaluationResult = Int.MIN_VALUE
+    open var evaluationResult : Optional<Int> = Optional.empty()
 
     fun <T> evaluate(evaluator : (Move) -> T) : T {
         val result = evaluator(this)
-        this.evaluationResult = result as Int
+        this.evaluationResult = Optional.of(result as Int)
 
         return result
     }

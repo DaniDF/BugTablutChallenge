@@ -22,7 +22,7 @@ fun main(args: Array<String>) {
 
     when(args.size) {
         3 -> {
-            role = Role.valueOf(args[0])
+            role = Role.valueOf(args[0].uppercase())
             ip = args[1]
             timeout = args[2].toInt()
             if(timeout < 0) {

@@ -76,7 +76,7 @@ enum class TablutBoardCellValue {
     }
 }
 
-private class TablutBoardCells {
+class TablutBoardCells {
     companion object {
         val castle = hashSetOf(5 to 5)
         val blackStation = hashSetOf(
