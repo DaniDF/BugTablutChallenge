@@ -38,6 +38,13 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
 
         if (deep >= DEPTH_LIMIT) {
 
+            val compDfl : (Role) -> Int = {
+                when(it) {
+                    this.state.role -> Int.MIN_VALUE
+                    else -> Int.MAX_VALUE
+                }
+            }
+
             val compareFuncDfl: (Role) -> (List<Move>) -> Move? = {
                 when (it) {
                     this.state.role -> {
@@ -46,7 +53,7 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
                                 if(m.evaluationResult.isPresent) {
                                     m.evaluationResult.get()
                                 } else {
-                                    Int.MIN_VALUE
+                                    compDfl(it)
                                 }
                             }
                         }
@@ -57,7 +64,7 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
                                 if(m.evaluationResult.isPresent) {
                                     m.evaluationResult.get()
                                 } else {
-                                    Int.MAX_VALUE
+                                    compDfl(it)
                                 }
                             }
                         }
@@ -82,48 +89,26 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
                 }
             }
 
-            /*
-            val compareFunc: (Role) -> (List<Move>) -> Int = {
-                when (it) {
-                    this.state.role -> {
-                        { list ->
-                            list.maxOfOrNull { m -> m.evaluationResult } ?: 0
-                        }
-                    }   //MAX
-                    else -> {
-                        { list ->
-                            list.minOfOrNull { m -> m.evaluationResult } ?: 0
-                        }
-                    }   //MIN
-                }
-            }
-            */
-
             var writeEvaluations: (Move) -> Unit = {}
             writeEvaluations = { m ->
-                /*
-                val precedent : Move? = if(m.precedent.isPresent) {
-                    m.precedent.get()
-                } else {
-                    null
-                }
-                compareFunc(m.role)(m.following,precedent?.evaluationResult)?.let {
-                    m.evaluationResult = it.evaluationResult
-                    //toExpand = listOf(it.first)   //TODO solo a livello 4 aggiungi
-                }
-                */
-
-                //m.evaluationResult = compareFunc(m.role)(m.following)
 
                 if(m.precedent.isPresent && m.precedent.get().evaluationResult.isEmpty) {
-                    l.forEach { it.evaluate(this.evaluator::evaluate) }
-                    compareFuncDfl(m.role)(l)?.let { m.precedent.get().evaluationResult = it.evaluationResult }
+                    m.following.forEach { it.evaluate(this.evaluator::evaluate) }
+                    compareFuncDfl(m.role)(m.following)?.let {
+                        m.evaluationResult = it.evaluationResult
+                        m.precedent.get().evaluationResult = it.evaluationResult
+                        m.precedent.get().following.forEach { bm ->
+                            if(bm.evaluationResult.isEmpty) {
+                                bm.evaluationResult = Optional.of(compDfl(m.role.opposite()))
+                            }
+                        }
+                    }
 
                 } else if(m.precedent.isPresent) {
                     var continueEvaluation = true
                     var localBest : Optional<Move> = Optional.empty()
 
-                    l.forEach {
+                    m.following.forEach {
                         if(continueEvaluation) {
                             it.evaluate(this.evaluator::evaluate)
                             localBest = Optional.of(compareFunc(m.role)(it,localBest))
@@ -132,8 +117,12 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
                         }
                     }
 
+                    if(localBest.isPresent) {
+                        m.evaluationResult = localBest.get().evaluationResult
+                    }
+
                     if(continueEvaluation && localBest.isPresent) {
-                        m.precedent.get().evaluationResult = localBest.get().evaluationResult
+                        m.precedent.get().evaluationResult = compareFunc(m.precedent.get().role)(m.precedent.get(),localBest).evaluationResult
                     }
                 }
 
@@ -147,13 +136,6 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
 
         }
 
-        this.state.moves.sortByDescending {
-            if(it.evaluationResult.isPresent) {
-                it.evaluationResult.get()
-            } else {
-                Int.MIN_VALUE
-            }
-        }
         this.state.toExpand.addAll(toExpand)
         this.mutex.release()
     }
@@ -239,13 +221,15 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
     }
 
     companion object {
-        private const val DEPTH_LIMIT = 2
+        private const val DEPTH_LIMIT = 3
 
-        private fun <T, R : Comparable<R>> max(a : T,b : Optional<T>, selector : (T) -> Optional<R>) : T {
+        private fun <T, R : Comparable<R>> max(a : T, b : Optional<T>, selector : (T) -> Optional<R>) : T {
             return if(b.isEmpty) {
                 a
+            } else if(b.isPresent && selector(b.get()).isEmpty) {
+                a
             } else {
-                if(maxOf(selector(a).get(),selector(b.get()).get()) == selector(a)) {
+                if(maxOf(selector(a).get(),selector(b.get()).get()) == selector(a).get()) {
                     a
                 } else {
                     b.get()
@@ -253,13 +237,13 @@ class Agent(val state: AgentState) : it.dani.think.Thinker {
             }
         }
 
-        private fun <T, R : Comparable<R>> min(a : T,b : Optional<T>, selector : (T) -> Optional<R>) : T {
+        private fun <T, R : Comparable<R>> min(a : T, b : Optional<T>, selector : (T) -> Optional<R>) : T {
             return if(b.isEmpty) {
                 a
             } else if(b.isPresent && selector(b.get()).isEmpty) {
                 a
             } else {
-                if(minOf(selector(a).get(),selector(b.get()).get()) == selector(a)) {
+                if(minOf(selector(a).get(),selector(b.get()).get()) == selector(a).get()) {
                     a
                 } else {
                     b.get()

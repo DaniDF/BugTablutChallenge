@@ -12,6 +12,10 @@ class AgentState(
 ) {
     fun updateBoard(board: TablutBoard) {
         this.board = board
-        this.currentMove = Move(board,this.currentMove.move,this.currentMove.role,this.currentMove.precedent,this.currentMove.eat)
+        this.currentMove = if(this.currentMove is FakeMove) {
+            FakeMove(board,this.currentMove.move,this.currentMove.role,this.currentMove.precedent,this.currentMove.eat)
+        } else {
+            Move(board,this.currentMove.move,this.currentMove.role,this.currentMove.precedent,this.currentMove.eat)
+        }
     }
 }

@@ -141,7 +141,7 @@ class Rules {
 
     private fun verifyTableConstraint(board: TablutBoard, oldRow: Int, oldCol: Int, newRow: Int, newCol: Int): Boolean {
         val flagEmpty = board.board[newRow][newCol] == TablutBoardCellValue.EMPTY
-        val flagCastle = board.isCastle(newRow, newCol)
+        val flagCastle = board.isThrone(newRow, newCol)
         val flagNewBlackStation = board.isBlackStation(newRow, newCol)
         val flagOldBlackStation = board.isBlackStation(oldRow, oldCol)
 
@@ -168,16 +168,13 @@ class Rules {
         }
     }
 
-    private fun testEat(board: TablutBoard, move: Move): List<Eat> {
-        val result: MutableList<Eat> = ArrayList()
+    private fun testEat(board: TablutBoard,move : Move) : List<Eat> {
+        val result : MutableList<Eat> = ArrayList()
         val newPosition = move.move.second
 
-        testEatActive(board, newPosition).forEach {
-            when (board.board[it.first.row][it.first.col]) {
-                TablutBoardCellValue.KING -> result += Eat(
-                    it.first,
-                    true
-                )   //TODO sistemare controllo di tre pedine attorno al re
+        testEatActive(board,newPosition).forEach {
+            when(board.board[it.first.row][it.first.col]) {
+                TablutBoardCellValue.KING -> result += Eat(it.first,true)
                 TablutBoardCellValue.WHITE, TablutBoardCellValue.BLACK -> Eat(it.first)
                 else -> {}
             }
@@ -186,39 +183,124 @@ class Rules {
         return result
     }
 
-    private fun testEatActive(board: TablutBoard, position: Position): List<Pair<Position, Int>> {
-        val result: MutableList<Pair<Position, Int>> = ArrayList()
+    private fun testEatActive(board: TablutBoard,position : Position) : List<Pair<Position,Int>> {
+        val result : MutableList<Pair<Position,Int>> = ArrayList()
 
-        for (r in -1..1) {
-            for (c in -1..1) {
-                if ((r == 0 || c == 0) && (position.row + r) in 0..8 && (position.col + c) in 0..8 &&
-                    board.board[position.row + r][position.col + c] != TablutBoardCellValue.EMPTY &&
-                    board.board[position.row + r][position.col + c] != board.board[position.row][position.col]
-                ) {
-                    result += Position(position.row + r, position.col + c) to this.testEatPassive(
-                        board,
-                        Position(position.row + r, position.col + c)
-                    )
+        if (board.board[position.row][position.col] == TablutBoardCellValue.WHITE || board.board[position.row][position.col] == TablutBoardCellValue.KING) { //sono bianco o re
+
+            // mangio nero a destra
+            if ((position.col+2) in 0..8 && board.board[position.row][position.col+1] == TablutBoardCellValue.BLACK
+                && (board.board[position.row][position.col+2] == TablutBoardCellValue.WHITE || board.board[position.row][position.col+2] == TablutBoardCellValue.THRONE || board.board[position.row][position.col+2] == TablutBoardCellValue.KING
+                        || board.isBlackStation(position.row,position.col+2))) {
+                result += Position(position.row,position.col) to 1
+            }
+
+            // mangio nero a sinistra
+            if ((position.col-2) in 0..8 && board.board[position.row][position.col-1] == TablutBoardCellValue.BLACK
+                && (board.board[position.row][position.col-2] == TablutBoardCellValue.WHITE || board.board[position.row][position.col-2] == TablutBoardCellValue.THRONE || board.board[position.row][position.col-2] == TablutBoardCellValue.KING
+                        || board.isBlackStation(position.row,position.col-2))) {
+                result += Position(position.row,position.col) to 1
+            }
+
+            // mangio nero sotto
+            if ((position.row+2) in 0..8 && board.board[position.row+1][position.col] == TablutBoardCellValue.BLACK
+                && (board.board[position.row+2][position.col] == TablutBoardCellValue.WHITE || board.board[position.row+2][position.col] == TablutBoardCellValue.THRONE || board.board[position.row+2][position.col] == TablutBoardCellValue.KING
+                        || board.isBlackStation(position.row+2,position.col))) {
+                result += Position(position.row,position.col) to 1
+            }
+
+            // mangio nero sopra
+            if ((position.row-2) in 0..8 && board.board[position.row-1][position.col] == TablutBoardCellValue.BLACK
+                && (board.board[position.row-2][position.col] == TablutBoardCellValue.WHITE || board.board[position.row-2][position.col] == TablutBoardCellValue.THRONE || board.board[position.row-2][position.col] == TablutBoardCellValue.KING
+                        || board.isBlackStation(position.row-2,position.col))) {
+                result += Position(position.row,position.col) to 1
+            }
+        } //fine IF sono bianco
+
+        if (board.board[position.row][position.col] == TablutBoardCellValue.BLACK) { //sono nero
+
+            // mangio bianco a destra
+            if ((position.col+2) in 0..8 && board.board[position.row][position.col+1] == TablutBoardCellValue.WHITE
+                && (board.board[position.row][position.col+2] == TablutBoardCellValue.BLACK || board.board[position.row][position.col+2] == TablutBoardCellValue.THRONE
+                        || board.isBlackStation(position.row,position.col+2))) {
+                result += Position(position.row,position.col) to 1
+            }
+
+            // mangio bianco a sinistra
+            else if ((position.col-2) in 0..8 && board.board[position.row][position.col-1] == TablutBoardCellValue.WHITE
+                && (board.board[position.row][position.col-2] == TablutBoardCellValue.BLACK || board.board[position.row][position.col-2] == TablutBoardCellValue.THRONE
+                        || board.isBlackStation(position.row,position.col-2))) {
+                result += Position(position.row,position.col) to 1
+            }
+
+            // mangio bianco sotto
+            else if ((position.row+2) in 0..8 && board.board[position.row+1][position.col] == TablutBoardCellValue.WHITE
+                && (board.board[position.row+2][position.col] == TablutBoardCellValue.BLACK || board.board[position.row+2][position.col] == TablutBoardCellValue.THRONE
+                        || board.isBlackStation(position.row+2,position.col))) {
+                result += Position(position.row,position.col) to 1
+            }
+
+            // mangio bianco sopra
+            else if ((position.row-2) in 0..8 && board.board[position.row-1][position.col] == TablutBoardCellValue.WHITE
+                && (board.board[position.row-2][position.col] == TablutBoardCellValue.BLACK || board.board[position.row-2][position.col] == TablutBoardCellValue.THRONE
+                        || board.isBlackStation(position.row-2,position.col))) {
+                result += Position(position.row,position.col) to 1
+            }
+
+
+            //sono nero e circondo il re
+            if ((position.row == 3 && position.col == 4) || (position.row == 4 && position.col == 3) || (position.row == 5 && position.col == 4) || (position.row == 4 && position.col == 5)) {
+                    var count = 0
+                    if (board.board[3][4] == TablutBoardCellValue.BLACK) count++
+                    if (board.board[4][3] == TablutBoardCellValue.BLACK) count++
+                    if (board.board[5][4] == TablutBoardCellValue.BLACK) count++
+                    if (board.board[4][5] == TablutBoardCellValue.BLACK) count++
+                    if (count == 3) {
+                        result += Position(position.row,position.col) to 1
+                    }
+                }
+
+                if ((position.row == 2 && position.col == 4) || (position.row == 3 && position.col == 5) || (position.row == 3 && position.col == 3) && board.board[3][4] == TablutBoardCellValue.KING) {
+                    var count = 0
+                    if (board.board[2][4]== TablutBoardCellValue.BLACK) count++
+                    if (board.board[3][3]== TablutBoardCellValue.BLACK) count++
+                    if (board.board[3][5]== TablutBoardCellValue.BLACK) count++
+                    if (count == 2) {
+                        result += Position(position.row,position.col) to 1
+                    }
+                }
+
+            if ((position.row == 5 && position.col == 3) || (position.row == 4 && position.col == 2) || (position.row == 3 && position.col == 3) && board.board[4][3] == TablutBoardCellValue.KING) {
+                var count = 0
+                if (board.board[4][2]== TablutBoardCellValue.BLACK) count++
+                if (board.board[5][3]== TablutBoardCellValue.BLACK) count++
+                if (board.board[3][3]== TablutBoardCellValue.BLACK) count++
+                if (count == 2) {
+                    result += Position(position.row,position.col) to 1
                 }
             }
-        }
 
-        return result
-    }
-
-    private fun testEatPassive(board: TablutBoard, position: Position): Int {
-        var result = 0
-
-        for (r in -1..1) {
-            for (c in -1..1) {
-                if ((r == 0 || c == 0) && (position.row + r) in 0..8 && (position.col + c) in 0..8 &&
-                    board.board[position.row + r][position.col + c] != TablutBoardCellValue.EMPTY &&
-                    board.board[position.row + r][position.col + c] != board.board[position.row][position.col]
-                ) {
-                    result++
+            if ((position.row == 5 && position.col == 5) || (position.row == 5 && position.col == 3) || (position.row == 6 && position.col == 4) && board.board[5][4] == TablutBoardCellValue.KING) {
+                var count = 0
+                if (board.board[5][5]== TablutBoardCellValue.BLACK) count++
+                if (board.board[5][3]== TablutBoardCellValue.BLACK) count++
+                if (board.board[6][4]== TablutBoardCellValue.BLACK) count++
+                if (count == 2) {
+                    result += Position(position.row,position.col) to 1
                 }
             }
-        }
+
+            if ((position.row == 3 && position.col == 5) || (position.row == 4 && position.col == 6) || (position.row == 5 && position.col == 5) && board.board[4][5] == TablutBoardCellValue.KING) {
+                var count = 0
+                if (board.board[3][5]== TablutBoardCellValue.BLACK) count++
+                if (board.board[4][6]== TablutBoardCellValue.BLACK) count++
+                if (board.board[5][5]== TablutBoardCellValue.BLACK) count++
+                if (count == 2) {
+                    result += Position(position.row,position.col) to 1
+                }
+            }
+
+        } //fine IF sono nero
 
         return result
     }

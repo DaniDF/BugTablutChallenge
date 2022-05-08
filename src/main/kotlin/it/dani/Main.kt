@@ -69,6 +69,13 @@ fun main(args: Array<String>) {
                         onTikListeners += {
                             agent.stopThink()
                             agentState = agent.state
+                            agentState.moves.sortByDescending { m ->
+                                if(m.evaluationResult.isPresent) {
+                                    m.evaluationResult.get()
+                                } else {
+                                    Int.MIN_VALUE
+                                }
+                            }
                             val move = agentState.moves.first()
                             println("I play $move")
                             server.respond(move.toAction())

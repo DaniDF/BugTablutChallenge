@@ -9,11 +9,13 @@ open class Move(open val board: TablutBoard, open val move : Pair<Position,Posit
     private var futureTableCache = Optional.empty<TablutBoard>()
     open var evaluationResult : Optional<Int> = Optional.empty()
 
-    fun <T> evaluate(evaluator : (Move) -> T) : T {
-        val result = evaluator(this)
-        this.evaluationResult = Optional.of(result as Int)
+    fun evaluate(evaluator : (Move) -> Int) : Int {
+        if(this.evaluationResult.isEmpty) {
+            val result = evaluator(this)
+            this.evaluationResult = Optional.of(result)
+        }
 
-        return result
+        return this.evaluationResult.get()
     }
 
     override fun toString(): String {

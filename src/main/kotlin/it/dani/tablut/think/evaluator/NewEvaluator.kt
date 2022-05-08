@@ -17,6 +17,7 @@ class NewEvaluator : Evaluator {
         val boardData = BoardData.extractData(move.futureTable())
 
         var result = this.surroundingForKillOrBeKilled(move) * BLACK_SURROUND
+
         result += (this.surroundingKing(move, boardData) * BLACK_SURROUNDING_KING_VALUE).coerceAtMost(Int.MAX_VALUE)
         val freeLines = this.freeLines(move,boardData)
         result += (freeLines.first * BLACK_FREE_LINES_KING_VALUE + freeLines.second * BLACK_FREE_LINES_VALUE).coerceAtMost(Int.MAX_VALUE)
