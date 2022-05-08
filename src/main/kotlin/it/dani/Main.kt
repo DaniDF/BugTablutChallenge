@@ -12,6 +12,7 @@ import it.dani.tablut.think.AgentState
 import it.dani.tablut.time.TablutTimer
 import it.myunibo.Action
 import it.myunibo.State
+import kotlin.collections.ArrayList
 
 fun main(args: Array<String>) {
 
@@ -21,7 +22,7 @@ fun main(args: Array<String>) {
 
     when(args.size) {
         3 -> {
-            role = Role.valueOf(args[0])
+            role = Role.valueOf(args[0].uppercase())
             ip = args[1]
             timeout = args[2].toInt()
             if(timeout < 0) {
@@ -40,12 +41,12 @@ fun main(args: Array<String>) {
     val server = ServerTablut(ip,configurator.port).also { server ->
         server.onReceiveList += {
             val board = gson.fromJson(it,TablutBoard::class.java)
-            //println(it)
             println(board)
 
             when(board.turn){
                 role -> {
-                    agentState.board = board
+                    agentState.updateBoard(board)
+
                     agentState.moves.clear()
 
                     if(agentState.moves.isNotEmpty()) {
@@ -68,6 +69,13 @@ fun main(args: Array<String>) {
                         onTikListeners += {
                             agent.stopThink()
                             agentState = agent.state
+                            agentState.moves.sortByDescending { m ->
+                                if(m.evaluationResult.isPresent) {
+                                    m.evaluationResult.get()
+                                } else {
+                                    Int.MIN_VALUE
+                                }
+                            }
                             val move = agentState.moves.first()
                             println("I play $move")
                             server.respond(move.toAction())
