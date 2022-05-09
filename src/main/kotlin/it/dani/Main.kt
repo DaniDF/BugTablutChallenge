@@ -24,7 +24,7 @@ fun main(args: Array<String>) {
         3 -> {
             role = Role.valueOf(args[0].uppercase())
             ip = args[1]
-            timeout = args[2].toInt()
+            timeout = (args[2].toInt() - 5).coerceAtLeast(5)
             if(timeout < 0) {
                 throw IllegalArgumentException("Error: timeout[${args[2]}] must be not negative")
             }
