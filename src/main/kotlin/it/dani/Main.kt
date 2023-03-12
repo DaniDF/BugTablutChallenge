@@ -7,12 +7,8 @@ import it.dani.tablut.data.Role
 import it.dani.tablut.data.TablutBoard
 import it.dani.tablut.server.ServerTablut
 import it.dani.tablut.server.configuration.Configurator
-import it.dani.tablut.think.Agent
-import it.dani.tablut.think.AgentState
-import it.dani.tablut.time.TablutTimer
 import it.myunibo.Action
 import it.myunibo.State
-import kotlin.collections.ArrayList
 
 fun main(args: Array<String>) {
 
@@ -36,8 +32,6 @@ fun main(args: Array<String>) {
 
     val gson = Gson()
 
-    var agentState = AgentState(role, TablutBoard())
-
     val server = ServerTablut(ip,configurator.port).also { server ->
         server.onReceiveList += {
             val board = gson.fromJson(it,TablutBoard::class.java)
@@ -45,36 +39,10 @@ fun main(args: Array<String>) {
 
             when(board.turn){
                 role -> {
-                    agentState.updateBoard(board)
-
-                    agentState.moves.clear()
-                    agentState.toExpand.clear()
-
-                    if(agentState.moves.isNotEmpty()) {
-                        var flagStop = false
-                        var count = -1
-                        while(!flagStop && ++count !in agentState.moves.first().following.indices) {
-                            flagStop = agentState.moves.first().following[count].futureTable() == board
-                        }
-
-                        if(flagStop) {
-                            agentState.moves = agentState.moves.first().following[count].following
-                        } else {
-                            agentState.moves = ArrayList()
-                        }
-                    }
-
-                    val agent = Agent(agentState)
-                    agent.startThink()
-                    TablutTimer(timeout.toLong() * 1000).apply {
-                        onTikListeners += {
-                            agent.stopThink()
-                            agentState = agent.state
-                            val move = agentState.moves.first()
-                            println("I play $move")
-                            server.respond(move.toAction())
-                        }
-                    }.start()
+                    /*
+                    println("I play $move")
+                    server.respond(move.toAction())
+                    */
                 }
                 Role.BLACKWIN, Role.WHITEWIN -> {
                     if(role == Role.valueOf(it)) {
