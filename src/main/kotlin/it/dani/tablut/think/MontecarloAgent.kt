@@ -13,10 +13,9 @@ import java.io.OutputStream
 import java.lang.StringBuilder
 
 class MontecarloAgent : LearningThinker {
-
     private var memory : StateActionMemory = StateActionMemory()
     override fun learnEpisode() : LearningEpisode {
-        return LearningEpisode(memory)
+        return LearningEpisode(this.memory)
     }
 
     override fun loadMemory(inputStream: InputStream) {

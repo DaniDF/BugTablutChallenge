@@ -64,14 +64,16 @@ fun main(args: Array<String>) {
 
     when(flagLearn) {
         true -> {
-            for(count in 0 until 10000) {
-                println("New game")
+            println("Start learning")
+            for(count in 0 until 101) {
+                println("New game $count")
                 learnGame(ip,configurator,role,agent.learnEpisode())
                 val fileOut = FileOutputStream("${count / 100}_weights.json")
                 agent.storeMemory(fileOut)
                 fileOut.close()
-                Thread.sleep(5000)
+                Thread.sleep(1000)
             }
+            println("End leaning")
         }
         false -> {
 
@@ -90,7 +92,7 @@ fun learnGame(ip : String, configurator : Configurator, role : Role, learningEpi
 
         server.onReceiveList += { receivedString ->
             val board = gson.fromJson(receivedString,TablutBoard::class.java)
-            println(board)
+            //println(board)
 
             when(board.turn){
                 role -> {
@@ -134,7 +136,7 @@ class Main {
     companion object {
         const val PLAYERNAME = "Bug Tablut Theory"
         const val POSITIVE_REWARD = 1
-        const val NEGATIVE_REWARD = 1
-        const val DRAW_REWARD = 1
+        const val NEGATIVE_REWARD = -1
+        const val DRAW_REWARD = 0
     }
 }
