@@ -10,13 +10,16 @@ import java.util.concurrent.Semaphore
 
 class ServerTablut(serverIp : String,serverPort : Int) : ServerCommunicator(serverIp,serverPort) {
 
-    private val daemon = Thread { this.daemonIn() }.also { it.start() }
     private val sockOut = DataOutputStream(super.server.getOutputStream())
     private val gson = Gson()
 
     val mutex = Semaphore(0)
 
-    private fun daemonIn() {
+    init {
+        Thread { this.receive() }.also { it.start() }
+    }
+
+    private fun receive() {
         try {
             val serverIn = DataInputStream(this.server.getInputStream())
 
