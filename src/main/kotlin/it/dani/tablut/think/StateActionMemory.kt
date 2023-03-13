@@ -5,6 +5,7 @@ import it.dani.tablut.data.Move
 import it.dani.tablut.data.Position
 import it.dani.tablut.data.TablutBoard
 import java.util.HashSet
+import java.util.Random
 
 class StateActionMemory {
     private val stateAction : MutableMap<TablutBoard,MutableSet<Pair<Move, Double>>> = HashMap()
@@ -12,8 +13,12 @@ class StateActionMemory {
     fun getGreedyMove(state : TablutBoard, epsilon : Double = 0.0) : Move {
         this.stateAction.putIfAbsent(state, HashSet())
 
+        val rand = Random()
+        val posFrom = Position(rand.nextInt(9), rand.nextInt(9))
+        val posTo = Position(rand.nextInt(9), rand.nextInt(9))
+
         val result = if(this.stateAction[state]!!.isEmpty()) {
-            Move(state, Position(0,0) to Position(0,0), state.turn) to 0.0 //TODO o scegli tra sole posizioni valide o le generi random
+            Move(state, posFrom to posTo, state.turn) to 0.0
 
         } else {
             val randVal = Utils.getDistributedRandomElement(listOf(0, 1), listOf(1-epsilon, epsilon)) == 1

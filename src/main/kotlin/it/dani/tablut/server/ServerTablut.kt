@@ -25,19 +25,20 @@ class ServerTablut(serverIp : String,serverPort : Int) : ServerCommunicator(serv
 
             while(!this.server.isInputShutdown) {
                 val lines = StreamUtils.readString(serverIn)
-                super.onReceiveList.forEach {
-                    it(lines)
-                }
+                super.onReceiveList.forEach { it(lines) }
 
             }
         } catch (e : IOException) {
-            System.err.println(e.message)
+            System.err.println(e)
+            super.onReceiveErrorList.forEach { it(e) }
         }
 
         this.mutex.release()
     }
 
     fun respond(response : Any)  {
-        StreamUtils.writeString(this.sockOut,this.gson.toJson(response))
+        val outString = this.gson.toJson(response)
+        StreamUtils.writeString(this.sockOut,outString)
+        super.onSendList.forEach { it(outString) }
     }
 }

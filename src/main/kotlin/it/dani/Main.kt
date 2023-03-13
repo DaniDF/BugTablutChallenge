@@ -15,6 +15,7 @@ import it.dani.tablut.server.configuration.Configurator
 import it.dani.tablut.think.MontecarloAgent
 import it.myunibo.Action
 import it.myunibo.State
+import java.io.FileInputStream
 import java.io.FileOutputStream
 
 fun main(args: Array<String>) {
@@ -22,29 +23,59 @@ fun main(args: Array<String>) {
     val role : Role
     val ip : String
     val timeout : Int
+    val weightFile : String
+    val flagLearn: Boolean
+
+    val agent : LearningThinker = MontecarloAgent()
 
     when(args.size) {
-        3 -> {
+        4,5 -> {
             role = Role.valueOf(args[0].uppercase())
             ip = args[1]
             timeout = (args[2].toInt() - 5).coerceAtLeast(5)
             if(timeout < 0) {
                 throw IllegalArgumentException("Error: timeout[${args[2]}] must be not negative")
             }
+
+            flagLearn = when(args[3]) {
+                "learn" -> {
+                    if(args.size == 5) {
+                        weightFile = args[4]
+                        agent.loadMemory(FileInputStream(weightFile))
+                    }
+                    true
+                }
+                "play" -> {
+                    if(args.size != 5) {
+                        throw IllegalArgumentException("Error: not enough parameters, usage <role> <ip> <timeout> <learn | play> <weights_file>")
+                    }
+
+                    weightFile = args[4]
+                    agent.loadMemory(FileInputStream(weightFile))
+                    false
+                }
+                else -> throw IllegalArgumentException("Error: not enough parameters, usage <role> <ip> <timeout> <learn | play> <weights_file>")
+            }
         }
-        else -> throw IllegalArgumentException("Error: not enough parameters, usage <role> <ip> <timeout>")
+        else -> throw IllegalArgumentException("Error: not enough parameters, usage <role> <ip> <timeout> <learn | play> <weights_file>")
     }
 
     val configurator = Configurator(role)
 
-    val agent : LearningThinker = MontecarloAgent()
+    when(flagLearn) {
+        true -> {
+            for(count in 0 until 10000) {
+                println("New game")
+                learnGame(ip,configurator,role,agent.learnEpisode())
+                val fileOut = FileOutputStream("${count / 100}_weights.json")
+                agent.storeMemory(fileOut)
+                fileOut.close()
+                Thread.sleep(5000)
+            }
+        }
+        false -> {
 
-    for(count in 0 until 1) {
-        learnGame(ip,configurator,role,agent.learnEpisode())
-        val fileOut = FileOutputStream("weights_$count.json")
-        agent.storeMemory(fileOut)
-        fileOut.close()
-        Thread.sleep(10000)
+        }
     }
 }
 
@@ -52,6 +83,11 @@ fun learnGame(ip : String, configurator : Configurator, role : Role, learningEpi
     val gson = Gson()
 
     val server = ServerTablut(ip,configurator.port).also { server ->
+        server.onReceiveErrorList += { _ ->
+            println("My name in ${PLAYERNAME}, I'm $role and I LOSE :(")
+            learningEpisode.rewardEpisode(NEGATIVE_REWARD)
+        }
+
         server.onReceiveList += { receivedString ->
             val board = gson.fromJson(receivedString,TablutBoard::class.java)
             println(board)
