@@ -1,10 +1,15 @@
 package it.dani.tablut.data
 
-class TablutBoard : java.io.Serializable {
+import com.google.gson.annotations.Expose
+import java.io.Serializable
+
+class TablutBoard : Serializable {
+    @Expose
     var board : Array<Array<TablutBoardCellValue>> = Array(9) {
         Array(9) { TablutBoardCellValue.EMPTY }
     }
 
+    @Expose
     var turn : Role = Role.WHITE
 
     override fun toString(): String {
@@ -50,16 +55,6 @@ class TablutBoard : java.io.Serializable {
 
 }
 
-enum class TablutBoardCellValue {
+enum class TablutBoardCellValue : Serializable {
     EMPTY,WHITE,KING,BLACK,THRONE;
-
-    fun opposite() : TablutBoardCellValue {
-        return when(this) {
-            WHITE -> BLACK
-            BLACK -> WHITE
-            THRONE -> THRONE
-            KING -> KING
-            EMPTY -> EMPTY
-        }
-    }
 }

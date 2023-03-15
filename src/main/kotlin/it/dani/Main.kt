@@ -15,8 +15,8 @@ import it.dani.tablut.server.configuration.Configurator
 import it.dani.tablut.think.MontecarloAgent
 import it.myunibo.Action
 import it.myunibo.State
-import java.io.FileInputStream
-import java.io.FileOutputStream
+import java.io.FileReader
+import java.io.FileWriter
 
 fun main(args: Array<String>) {
 
@@ -41,7 +41,7 @@ fun main(args: Array<String>) {
                 "learn" -> {
                     if(args.size == 5) {
                         weightFile = args[4]
-                        agent.loadMemory(FileInputStream(weightFile))
+                        agent.loadMemory(FileReader(weightFile))
                     }
                     true
                 }
@@ -51,7 +51,7 @@ fun main(args: Array<String>) {
                     }
 
                     weightFile = args[4]
-                    agent.loadMemory(FileInputStream(weightFile))
+                    agent.loadMemory(FileReader(weightFile))
                     false
                 }
                 else -> throw IllegalArgumentException("Error: not enough parameters, usage <role> <ip> <timeout> <learn | play> <weights_file>")
@@ -65,10 +65,10 @@ fun main(args: Array<String>) {
     when(flagLearn) {
         true -> {
             println("Start learning")
-            for(count in 0 until 101) {
+            for(count in 0 until 1) {
                 println("New game $count")
                 learnGame(ip,configurator,role,agent.learnEpisode())
-                val fileOut = FileOutputStream("${count / 100}_weights.json")
+                val fileOut = FileWriter("${count / 100}_weights.json")
                 agent.storeMemory(fileOut)
                 fileOut.close()
                 Thread.sleep(1000)

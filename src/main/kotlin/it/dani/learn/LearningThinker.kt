@@ -2,13 +2,13 @@ package it.dani.learn
 
 import it.dani.tablut.data.Move
 import it.dani.tablut.data.TablutBoard
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.Reader
+import java.io.Writer
 
 interface LearningThinker  {
     fun learnEpisode() : LearningEpisode
 
-    fun loadMemory(inputStream: InputStream)
-    fun storeMemory(outputStream: OutputStream)
+    fun loadMemory(reader: Reader)
+    fun storeMemory(writer: Writer)
     fun playMove(board: TablutBoard) : Move
 }

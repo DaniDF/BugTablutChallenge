@@ -1,15 +1,20 @@
 package it.dani.tablut.data
 
-enum class Role {
+import java.io.Serializable
+
+enum class Role : Serializable {
     WHITE, BLACK, WHITEWIN, BLACKWIN, DRAW;
 
-    fun opposite() : Role {
-        return when(this) {
-            WHITE -> BLACK
-            BLACK -> WHITE
-            WHITEWIN -> BLACKWIN
-            BLACKWIN -> WHITEWIN
-            DRAW -> DRAW
+    companion object {
+        fun String.convertIntoRole() : Role {
+            return when(this) {
+                "W","WHITE" -> WHITE
+                "B","BLACK" -> BLACK
+                "WW","WHITEWIN" -> WHITEWIN
+                "BW","BLACKWIN" -> BLACKWIN
+                "D","DRAW" -> DRAW
+                else -> throw IllegalArgumentException("Error: this string $this can not be converted into a Role object")
+            }
         }
     }
 }

@@ -1,6 +1,9 @@
 package it.dani.tablut.data
 
-open class Move(open val board: TablutBoard, open val move : Pair<Position,Position>, open val role : Role) {
+import com.google.gson.annotations.Expose
+import java.io.Serializable
+
+open class Move(@Expose open val board: TablutBoard, @Expose open val move : Pair<Position,Position>, @Expose open val role : Role) : Serializable {
     override fun toString(): String {
         return "from: ${this.move.first} to ${this.move.second}"
     }

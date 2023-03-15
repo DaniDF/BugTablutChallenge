@@ -6,11 +6,17 @@ import it.dani.tablut.think.StateActionMemory
 
 class LearningEpisode(private val memory: StateActionMemory) {
 
-    private val actionHistory : MutableList<Pair<TablutBoard, Move>> = ArrayList()
+    private var actionHistory : MutableList<Pair<TablutBoard, Move>> = ArrayList()
     fun playOneMove(board: TablutBoard) : Move {
         val action = this.memory.getGreedyMove(board, EPSILON_LEARNING)
         this.actionHistory += board to action
         return action
+    }
+
+    fun setPredefinedHistory(history : List<Pair<TablutBoard, Move>>) {
+        this.memory.addMoves(history)
+        this.actionHistory = ArrayList()
+        this.actionHistory.addAll(history)
     }
 
     fun rewardEpisode(reward : Int) {

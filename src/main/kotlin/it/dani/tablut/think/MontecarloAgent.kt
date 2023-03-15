@@ -1,37 +1,29 @@
 package it.dani.tablut.think
 
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.annotations.Expose
 import it.dani.learn.LearningEpisode
 import it.dani.tablut.data.Move
 import it.dani.tablut.data.TablutBoard
 import it.dani.learn.LearningThinker
-import java.io.BufferedReader
-import java.io.DataOutputStream
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.io.OutputStream
-import java.lang.StringBuilder
+import java.io.*
 
 class MontecarloAgent : LearningThinker {
+    @Expose
     private var memory : StateActionMemory = StateActionMemory()
     override fun learnEpisode() : LearningEpisode {
         return LearningEpisode(this.memory)
     }
 
-    override fun loadMemory(inputStream: InputStream) {
-        val dataIn = BufferedReader(InputStreamReader(inputStream))
-        val gson = Gson()
-
-        val lines = StringBuilder()
-        dataIn.readLines().forEach { lines.append(it) }
-
-        this.memory = gson.fromJson(lines.toString(), StateActionMemory::class.java)
+    override fun loadMemory(reader: Reader) {
+        val gson = GsonBuilder().create()
+        this.memory = gson.fromJson(reader, StateActionMemory::class.java)
     }
 
-    override fun storeMemory(outputStream: OutputStream) {
-        val dataOut = DataOutputStream(outputStream)
-        val gson = Gson()
-        dataOut.writeChars(gson.toJson(this.memory))
+    override fun storeMemory(writer: Writer) {
+        val gson = GsonBuilder().setPrettyPrinting().create()
+        gson.toJson(this.memory,writer)
+        writer.flush()
     }
 
     override fun playMove(board: TablutBoard) : Move {

@@ -9,6 +9,13 @@ import java.util.Random
 class StateActionMemory {
     private val stateAction : MutableMap<TablutBoard,MutableMap<Move, Double>> = HashMap()
 
+    fun addMoves(moves : List<Pair<TablutBoard, Move>>) {
+        moves.forEach { move ->
+            this.stateAction.putIfAbsent(move.first, HashMap())
+            this.stateAction[move.first]!!.putIfAbsent(move.second, 0.0)
+        }
+    }
+
     fun getGreedyMove(state : TablutBoard, epsilon : Double = 0.0) : Move {
         this.stateAction.putIfAbsent(state, HashMap())
 
