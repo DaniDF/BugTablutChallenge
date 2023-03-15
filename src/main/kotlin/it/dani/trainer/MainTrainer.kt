@@ -2,19 +2,23 @@ package it.dani.trainer
 
 import it.dani.Main
 import it.dani.learn.LearningThinker
+import it.dani.learnGame
 import it.dani.tablut.data.Role
 import it.dani.tablut.data.Role.Companion.convertIntoRole
+import it.dani.tablut.server.configuration.Configurator
 import it.dani.tablut.think.MontecarloAgent
 import java.io.File
+import java.io.FileWriter
 import java.text.ParseException
 
 fun main(args : Array<String>) {
-    if(args.size < 2) {
-        error("Error no file provided")
+    if(args.size < 3) {
+        error("Error no file provided - use <role> <ip> <files>...")
     }
 
     val role = args[0].convertIntoRole()
-    val filenames = args.copyOfRange(1,args.size)
+    val ip = args[1]
+    val filenames = args.copyOfRange(2,args.size)
 
     val agent : LearningThinker = MontecarloAgent()
 
@@ -40,7 +44,23 @@ fun main(args : Array<String>) {
         }
     }
 
-    println("End")
+    FileWriter("weights.json").use { fileOut ->
+        agent.storeMemory(fileOut)
+        fileOut.close()
+    }
+
+    println("Start learning")
+    for(count in 0 until 100000) {
+        println("New game $count")
+        learnGame(ip,Configurator(role),role,agent.learnEpisode(0.1))
+        FileWriter("${count / 100}_weights.json").use { fileOut ->
+            agent.storeMemory(fileOut)
+            fileOut.close()
+        }
+        Thread.sleep(1000)
+    }
+    println("End learning")
+
 }
 
 fun learnFromAFile(agent : LearningThinker, filename : String, role : Role) {

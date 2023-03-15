@@ -65,18 +65,20 @@ fun main(args: Array<String>) {
     when(flagLearn) {
         true -> {
             println("Start learning")
-            for(count in 0 until 1) {
+            for(count in 0 until 101) {
                 println("New game $count")
                 learnGame(ip,configurator,role,agent.learnEpisode())
-                val fileOut = FileWriter("${count / 100}_weights.json")
-                agent.storeMemory(fileOut)
-                fileOut.close()
+                FileWriter("${count / 100}_weights.json").use { fileOut ->
+                    agent.storeMemory(fileOut)
+                    fileOut.close()
+                }
                 Thread.sleep(1000)
             }
-            println("End leaning")
+            println("End learning")
         }
         false -> {
-
+            println("Start playing")
+            playGame(ip, configurator, role, agent)
         }
     }
 }
@@ -92,7 +94,6 @@ fun learnGame(ip : String, configurator : Configurator, role : Role, learningEpi
 
         server.onReceiveList += { receivedString ->
             val board = gson.fromJson(receivedString,TablutBoard::class.java)
-            //println(board)
 
             when(board.turn){
                 role -> {
@@ -114,6 +115,45 @@ fun learnGame(ip : String, configurator : Configurator, role : Role, learningEpi
                 Role.DRAW -> {
                     println("My name in ${PLAYERNAME}, I'm $role and this game was a DRAW :(")
                     learningEpisode.rewardEpisode(DRAW_REWARD)
+                }
+                else -> {}
+            }
+        }
+    }
+
+    server.respond(PLAYERNAME)
+
+    server.mutex.acquire()
+}
+
+fun playGame(ip : String, configurator : Configurator, role : Role, agent: LearningThinker) {
+    val gson = Gson()
+
+    val server = ServerTablut(ip,configurator.port).also { server ->
+        server.onReceiveErrorList += { _ ->
+            println("My name in ${PLAYERNAME}, I'm $role and I LOSE :(")
+        }
+
+        server.onReceiveList += { receivedString ->
+            val board = gson.fromJson(receivedString,TablutBoard::class.java)
+            println(board)
+
+            when(board.turn){
+                role -> {
+                    val move = agent.playMove(board)
+
+                    println("I play $move")
+                    server.respond(move.toAction())
+                }
+                Role.BLACKWIN, Role.WHITEWIN -> {
+                    if(role == Role.valueOf(receivedString)) {
+                        println("My name in ${PLAYERNAME}, I'm $role and I WIN :)")
+                    } else {
+                        println("My name in ${PLAYERNAME}, I'm $role and I LOSE :(")
+                    }
+                }
+                Role.DRAW -> {
+                    println("My name in ${PLAYERNAME}, I'm $role and this game was a DRAW :(")
                 }
                 else -> {}
             }

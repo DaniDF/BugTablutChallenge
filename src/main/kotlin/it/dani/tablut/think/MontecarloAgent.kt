@@ -15,6 +15,10 @@ class MontecarloAgent : LearningThinker {
         return LearningEpisode(this.memory)
     }
 
+    override fun learnEpisode(epsilon: Double): LearningEpisode {
+        return LearningEpisode(this.memory, epsilon)
+    }
+
     override fun loadMemory(reader: Reader) {
         val gson = GsonBuilder().create()
         this.memory = gson.fromJson(reader, StateActionMemory::class.java)
@@ -29,5 +33,4 @@ class MontecarloAgent : LearningThinker {
     override fun playMove(board: TablutBoard) : Move {
         return this.memory.getGreedyMove(board)
     }
-
 }
