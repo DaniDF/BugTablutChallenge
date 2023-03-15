@@ -104,16 +104,16 @@ fun learnGame(ip : String, configurator : Configurator, role : Role, learningEpi
 
                 }
                 Role.BLACKWIN, Role.WHITEWIN -> {
-                    if(role == Role.valueOf(receivedString)) {
-                        println("My name in ${PLAYERNAME}, I'm $role and I WIN :)")
+                    if(role.getWinRole() == board.turn) {
+                        println("My name is ${PLAYERNAME}, I'm $role and I WIN :)")
                         learningEpisode.rewardEpisode(POSITIVE_REWARD)
                     } else {
-                        println("My name in ${PLAYERNAME}, I'm $role and I LOSE :(")
+                        println("My name is ${PLAYERNAME}, I'm $role and I LOSE :(")
                         learningEpisode.rewardEpisode(NEGATIVE_REWARD)
                     }
                 }
                 Role.DRAW -> {
-                    println("My name in ${PLAYERNAME}, I'm $role and this game was a DRAW :(")
+                    println("My name is ${PLAYERNAME}, I'm $role and this game was a DRAW :(")
                     learningEpisode.rewardEpisode(DRAW_REWARD)
                 }
                 else -> {}
@@ -146,14 +146,14 @@ fun playGame(ip : String, configurator : Configurator, role : Role, agent: Learn
                     server.respond(move.toAction())
                 }
                 Role.BLACKWIN, Role.WHITEWIN -> {
-                    if(role == Role.valueOf(receivedString)) {
-                        println("My name in ${PLAYERNAME}, I'm $role and I WIN :)")
+                    if(role.getWinRole() == board.turn) {
+                        println("My name is ${PLAYERNAME}, I'm $role and I WIN :)")
                     } else {
-                        println("My name in ${PLAYERNAME}, I'm $role and I LOSE :(")
+                        println("My name is ${PLAYERNAME}, I'm $role and I LOSE :(")
                     }
                 }
                 Role.DRAW -> {
-                    println("My name in ${PLAYERNAME}, I'm $role and this game was a DRAW :(")
+                    println("My name is ${PLAYERNAME}, I'm $role and this game was a DRAW :(")
                 }
                 else -> {}
             }

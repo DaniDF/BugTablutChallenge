@@ -52,7 +52,7 @@ fun main(args : Array<String>) {
     println("Start learning")
     for(count in 0 until 100000) {
         println("New game $count")
-        learnGame(ip,Configurator(role),role,agent.learnEpisode(0.1))
+        learnGame(ip,Configurator(role),role,agent.learnEpisode(0.1 * (1/(count+1))))
         FileWriter("${count / 100}_weights.json").use { fileOut ->
             agent.storeMemory(fileOut)
             fileOut.close()
@@ -75,20 +75,8 @@ fun learnFromAFile(agent : LearningThinker, filename : String, role : Role) {
         episode.setPredefinedHistory(roleMoves)
         val reward = try {
             when(game.gameResult) {
-                Role.WHITEWIN -> {
-                    if(role == Role.WHITE){
-                        Main.POSITIVE_REWARD
-                    } else {
-                        Main.NEGATIVE_REWARD
-                    }
-                }
-                Role.BLACKWIN -> {
-                    if(role == Role.BLACK){
-                        Main.POSITIVE_REWARD
-                    } else {
-                        Main.NEGATIVE_REWARD
-                    }
-                }
+                role.getWinRole() -> Main.POSITIVE_REWARD
+                role.getLoseRole() -> Main.NEGATIVE_REWARD
                 Role.DRAW -> Main.DRAW_REWARD
                 else -> Main.NEGATIVE_REWARD
             }
