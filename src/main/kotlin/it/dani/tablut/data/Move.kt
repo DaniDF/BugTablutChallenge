@@ -3,7 +3,7 @@ package it.dani.tablut.data
 import com.google.gson.annotations.Expose
 import java.io.Serializable
 
-open class Move(@Expose open val board: TablutBoard, @Expose open val move : Pair<Position,Position>, @Expose open val role : Role) : Serializable {
+open class Move(@Expose open val board: TablutBoard, @Expose open val move : Pair<Position,Position>, @Expose open val role : Role, @Expose open val eat : MutableList<Eat> = ArrayList()) : Serializable {
     override fun toString(): String {
         return "from: ${this.move.first} to ${this.move.second}"
     }

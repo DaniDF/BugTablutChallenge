@@ -29,7 +29,6 @@ class ServerTablut(serverIp : String,serverPort : Int) : ServerCommunicator(serv
 
             }
         } catch (e : IOException) {
-            System.err.println(e)
             super.onReceiveErrorList.forEach { it(e) }
         }
 

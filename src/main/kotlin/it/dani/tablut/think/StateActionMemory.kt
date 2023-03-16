@@ -2,12 +2,12 @@ package it.dani.tablut.think
 
 import it.dani.utils.Utils
 import it.dani.tablut.data.Move
-import it.dani.tablut.data.Position
+import it.dani.tablut.data.Rules
 import it.dani.tablut.data.TablutBoard
-import java.util.Random
 
 class StateActionMemory {
     private val stateAction : MutableMap<TablutBoard,MutableMap<Move, Double>> = HashMap()
+    private val rules : Rules = Rules()
 
     fun addMoves(moves : List<Pair<TablutBoard, Move>>) {
         moves.forEach { move ->
@@ -20,26 +20,19 @@ class StateActionMemory {
         this.stateAction.putIfAbsent(state, HashMap())
 
         val result = if(this.stateAction[state]!!.isEmpty()) {
-            val rand = Random()
-            val posFrom = Position(rand.nextInt(9), rand.nextInt(9))
-            val posTo = Position(rand.nextInt(9), rand.nextInt(9))
+            this.rules.genFeasibleMoves(state).forEach { newMove ->
+                this.stateAction[state]!![newMove] = 0.0
+            }
 
-            val move = Move(state, posFrom to posTo, state.turn)
-
-            this.stateAction[state]!![move] = 0.0
-
-            move
+            Utils.getRandomElement(this.stateAction[state]!!.keys)
 
         } else {
             val randVal = Utils.getDistributedRandomElement(listOf(0, 1), listOf(1-epsilon, epsilon)) == 1
 
             if(randVal) {
-                val rand = Random()
-                val posFrom = Position(rand.nextInt(9), rand.nextInt(9))
-                val posTo = Position(rand.nextInt(9), rand.nextInt(9))
-
-                val move = Move(state, posFrom to posTo, state.turn)
-                this.stateAction[state]!!.putIfAbsent(move,0.0)
+                this.rules.genFeasibleMoves(state).forEach { newMove ->
+                    this.stateAction[state]!!.putIfAbsent(newMove,0.0)
+                }
 
                 Utils.getRandomElement(this.stateAction[state]!!.keys)
             } else {

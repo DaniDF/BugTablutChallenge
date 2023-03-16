@@ -105,16 +105,18 @@ fun learnGame(ip : String, configurator : Configurator, role : Role, learningEpi
                 }
                 Role.BLACKWIN, Role.WHITEWIN -> {
                     if(role.getWinRole() == board.turn) {
-                        println("My name is ${PLAYERNAME}, I'm $role and I WIN :)")
+                        println("My name is ${PLAYERNAME}, I'm $role and I WIN, result ${board.turn} :)")
                         learningEpisode.rewardEpisode(POSITIVE_REWARD)
                     } else {
-                        println("My name is ${PLAYERNAME}, I'm $role and I LOSE :(")
+                        println("My name is ${PLAYERNAME}, I'm $role and I LOSE, result ${board.turn} :(")
                         learningEpisode.rewardEpisode(NEGATIVE_REWARD)
                     }
+                    server.onReceiveErrorList.clear()
                 }
                 Role.DRAW -> {
-                    println("My name is ${PLAYERNAME}, I'm $role and this game was a DRAW :(")
+                    println("My name is ${PLAYERNAME}, I'm $role and this game was a DRAW, result ${board.turn} :(")
                     learningEpisode.rewardEpisode(DRAW_REWARD)
+                    server.onReceiveErrorList.clear()
                 }
                 else -> {}
             }
@@ -147,13 +149,15 @@ fun playGame(ip : String, configurator : Configurator, role : Role, agent: Learn
                 }
                 Role.BLACKWIN, Role.WHITEWIN -> {
                     if(role.getWinRole() == board.turn) {
-                        println("My name is ${PLAYERNAME}, I'm $role and I WIN :)")
+                        println("My name is ${PLAYERNAME}, I'm $role and I WIN, result ${board.turn} :)")
                     } else {
-                        println("My name is ${PLAYERNAME}, I'm $role and I LOSE :(")
+                        println("My name is ${PLAYERNAME}, I'm $role and I LOSE, result ${board.turn} :(")
                     }
+                    server.onReceiveErrorList.clear()
                 }
                 Role.DRAW -> {
-                    println("My name is ${PLAYERNAME}, I'm $role and this game was a DRAW :(")
+                    println("My name is ${PLAYERNAME}, I'm $role and this game was a DRAW, result ${board.turn} :(")
+                    server.onReceiveErrorList.clear()
                 }
                 else -> {}
             }
